@@ -12,7 +12,7 @@ object ApplicationBuild extends Build {
   //  "com.google.oauth-client" % "google-oauth-client" % "1.14.1-beta",
     "com.google.oauth-client" % "google-oauth-client-java6" % "1.14.1-beta",
     "com.google.oauth-client" % "google-oauth-client-jetty" % "1.14.1-beta",
-  //  "com.google.http-client" % "google-http-client" % "1.14.1-beta",
+    "com.google.http-client" % "google-http-client-jackson2" % "1.14.1-beta",
     "com.google.api.client" % "google-api-client" % "1.4.1-beta",
     "com.google.apis" % "google-api-services-calendar" % "v3-rev37-1.14.1-beta"
   )
