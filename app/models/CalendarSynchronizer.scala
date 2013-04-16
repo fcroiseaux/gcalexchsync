@@ -28,7 +28,7 @@ object CalendarSynchronizer {
   val JSON_FACTORY = new JacksonFactory()
   val HTTP_TRANSPORT = new NetHttpTransport()
   val APPLICATION_NAME = "gcalexchsync_play"
-  val INTECH_CAL = "i88utuhmrkt77n8sov0qp3kd80@group.calendar.google.com"
+  val INTECH_CAL = "6ce44n25a9l2kimdm5fnpilqfs@group.calendar.google.com"
 
 
   def credential = {
@@ -50,11 +50,8 @@ object CalendarSynchronizer {
     HTTP_TRANSPORT, JSON_FACTORY, credential).setApplicationName(
     APPLICATION_NAME).build()
 
-  def syncAfter(startTime: Date) = {
+  def syncBetween(startTime: Date, endTime: Date) = {
     val service = new Service("https://exch.intech.lan/ews/Exchange.asmx", "fabrice.croiseaux", "virtual")
-
-    val dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    val endTime = new Date(startTime.getTime + 1000 * 60 * 60 * 24 * 365)
 
     val view = new CalendarView(startTime, endTime)
 
@@ -73,20 +70,24 @@ object CalendarSynchronizer {
 
 
   def removeAllEventsAfter(startDate: Date) = {
-    val events = client.events().list(INTECH_CAL).execute().getItems()
     var nbEvents = 0
-    if (events != null) {
-      val it = events.iterator()
-      Logger.info("Now : " + startDate)
-      while (it.hasNext) {
-        val event = it.next()
-        Logger.info("Event : " + event.getStart.getDateTime)
-        //   if (event.getStart.getDateTime.getValue > startDate.getTime) {
-        client.events().delete(INTECH_CAL, event.getId()).execute()
-        nbEvents = nbEvents + 1
-        //   }
+    var pageToken = null
+    do {
+      val eventList = client.events().list(INTECH_CAL).execute()
+      val events = eventList.getItems()
+      if (events != null) {
+        val it = events.iterator()
+        Logger.info("Now : " + startDate)
+        while (it.hasNext) {
+          val event = it.next()
+          Logger.info("Event : " + event.getStart.getDateTime)
+          if (event.getStart.getDateTime.getValue > startDate.getTime) {
+            client.events().delete(INTECH_CAL, event.getId()).execute()
+            nbEvents = nbEvents + 1
+          }
+        }
       }
-    }
+    } while (pageToken != null)
     nbEvents
   }
 
@@ -101,6 +102,18 @@ object CalendarSynchronizer {
     val start = new DateTime(app.getStartTime(), TimeZone.getTimeZone("UTC"))
     ev.setStart(new EventDateTime().setDateTime(start))
     val end = new DateTime(app.getEndTime(), TimeZone.getTimeZone("UTC"))
+    ev.setEnd(new EventDateTime().setDateTime(end))
+    ev
+  }
+
+  def newGoogleEvent() = {
+    val ev = new Event()
+    ev.setSummary("SUMMARY")
+    ev.setDescription("BODY")
+    val now = new Date()
+    val start = new DateTime(now, TimeZone.getTimeZone("UTC"))
+    ev.setStart(new EventDateTime().setDateTime(start))
+    val end = new DateTime(new Date(now.getTime + 1000 * 60 * 60), TimeZone.getTimeZone("UTC"))
     ev.setEnd(new EventDateTime().setDateTime(end))
     ev
   }
